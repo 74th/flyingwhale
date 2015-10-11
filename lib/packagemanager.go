@@ -1,5 +1,7 @@
 package lib
 
+import "os"
+
 // IPackageManager is the package manager interface
 type IPackageManager interface {
 	InitializeInstall()
@@ -12,16 +14,16 @@ type IPackageManager interface {
 
 	UpdatePackageManager()
 
+	GetBinList() []string
+
 	Install()
+
+	CreateCommandScript(commandName string)
 }
 
 // AbstractPackageManager is the abstract package manager
 type AbstractPackageManager struct {
 	Client *DockerClient
-}
-
-// CheckExecutableCommands exec ls
-func (pm *AbstractPackageManager) CheckExecutableCommands() {
 }
 
 // CreatePackageManager :
@@ -30,4 +32,22 @@ func CreatePackageManager(name string, client *DockerClient) IPackageManager {
 		return CreateNpm(client)
 	}
 	panic("cannot use " + name)
+}
+
+// CreateExecuteCommand :
+func (*AbstractPackageManager) CreateExecuteCommand(imageName string, commandName string, entryPoint []string) {
+
+	// TODO for root
+	// TODO for Windows
+
+	file, err := os.OpenFile("/usr/local/bin/"+commandName, os.O_CREATE|os.O_WRONLY, 0755)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	file.WriteString("#!/bin/sh\n")
+	file.WriteString("# This script was created by flying docker 0.1 \n")
+	//file.WriteString("eval $(whale env)")
+	file.WriteString("docker run -it --rm -v `pwd`:/src --workdir=/src --entrypoint=" + commandName + " " + imageName + " $*\n")
 }

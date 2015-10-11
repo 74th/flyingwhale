@@ -65,122 +65,79 @@ func (d *DockerClient) PullImage(name string) {
 
 // CreateContainer makes a container
 func (d *DockerClient) CreateContainer(containerName string, imageName string, entrypoint []string, cmd []string) {
-	config := docker.Config{
-		Image:        imageName,
-		Entrypoint:   []string{"ls"},
-		Cmd:          []string{"-1", "/usr/local/bin/"},
-		AttachStdin:  false,
-		AttachStdout: true,
-		AttachStderr: true}
 	opts := docker.CreateContainerOptions{
-		Config: &config,
-		Name:   containerName}
+		Config: &docker.Config{
+			Image:        imageName,
+			Entrypoint:   []string{"sh"},
+			AttachStdin:  true,
+			OpenStdin:    true,
+			StdinOnce:    true,
+			AttachStdout: true,
+			AttachStderr: true},
+		Name: containerName}
 	container, err := d.client.CreateContainer(opts)
 	if err != nil {
 		panic(err)
 	}
 	d.container = container
-	hostConfig := docker.HostConfig{}
 	d.client.StartContainer(
 		container.ID,
-		&hostConfig)
+		&docker.HostConfig{})
+}
 
-	// var stdin bytes.Buffer
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
-	d.client.Logs(docker.LogsOptions{
-		Container:    container.ID,
-		Stdout:       true,
-		Stderr:       true,
-		Follow:       true,
-		Tail:         "all",
-		OutputStream: &stdout,
-		ErrorStream:  &stderr})
-	d.client.RemoveContainer(docker.RemoveContainerOptions{
-		ID: container.ID})
-	fmt.Println(stdout.String())
-	fmt.Println(stderr.String())
-	fmt.Println("---")
-
-	config = docker.Config{
-		Image:        imageName,
-		Entrypoint:   []string{"sh"},
-		OpenStdin:    true,
-		StdinOnce:    true,
-		AttachStdin:  true,
-		AttachStdout: true,
-		AttachStderr: true}
-	container, err = d.client.CreateContainer(docker.CreateContainerOptions{
-		Config: &config,
-		Name:   containerName})
+// StopContainer stops a container
+func (d *DockerClient) StopContainer() {
+	err := d.client.StopContainer(
+		d.container.ID,
+		1)
 	if err != nil {
 		panic(err)
 	}
+}
 
-	d.client.StartContainer(
-		container.ID,
-		&hostConfig)
+// Exec is run
+func (d *DockerClient) Exec(commands []string) (stdout string, stderr string) {
 
 	exec, err := d.client.CreateExec(docker.CreateExecOptions{
 		AttachStdin:  false,
 		AttachStdout: true,
 		AttachStderr: true,
-		Cmd:          []string{"npm", "update"},
-		Container:    container.ID})
+		Cmd:          commands,
+		Container:    d.container.ID})
 	if err != nil {
 		panic(err)
 	}
-	stdout.Reset()
-	stderr.Reset()
-	d.client.StartExec(exec.ID, docker.StartExecOptions{
+
+	var stdoutStream bytes.Buffer
+	var stderrStream bytes.Buffer
+	err = d.client.StartExec(exec.ID, docker.StartExecOptions{
 		Detach:       false,
-		OutputStream: &stdout,
-		ErrorStream:  &stderr})
-	fmt.Println(stdout.String())
-	fmt.Println(stderr.String())
-	fmt.Println("---")
-
-	exec, err = d.client.CreateExec(docker.CreateExecOptions{
-		AttachStdin:  false,
-		AttachStdout: true,
-		AttachStderr: true,
-		Cmd:          []string{"npm", "install", "-yg", "mared"},
-		Container:    container.ID})
+		OutputStream: &stdoutStream,
+		ErrorStream:  &stderrStream})
 	if err != nil {
 		panic(err)
 	}
-	stdout.Reset()
-	stderr.Reset()
-	d.client.StartExec(exec.ID, docker.StartExecOptions{
-		Detach:       false,
-		OutputStream: &stdout,
-		ErrorStream:  &stderr})
-	fmt.Println(stdout.String())
-	fmt.Println("---")
-	fmt.Println(stderr.String())
-	fmt.Println("---")
-
-	err = d.client.StopContainer(
-		container.ID,
-		1)
-	if err != nil {
-		panic(err)
-	}
-
+	return stdoutStream.String(), stderrStream.String()
 }
 
-// Exec is run
-func (d *DockerClient) Exec(command []string) {
-	//d.client.StartExec(id string, opts docker.StartExecOptions)
-	// opts := docker.CreateExecOptions{
-	// 	AttachStdin:  false,
-	// 	AttachStdout: true,
-	// 	AttachStderr: true,
-	// 	Cmd:          command,
-	// 	Container:    d.container.ID}
-	// exec, err := d.client.CreateExec(opts)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// d.exec = exec
+// RemoveContainer remove a container
+func (d *DockerClient) RemoveContainer() {
+	err := d.client.RemoveContainer(docker.RemoveContainerOptions{
+		ID:    d.container.ID,
+		Force: true})
+	if err != nil {
+		panic(err)
+	}
+}
+
+// CommitContainer commit container
+func (d *DockerClient) CommitContainer(imageName string) {
+	_, err := d.client.CommitContainer(docker.CommitContainerOptions{
+		Container:  d.container.ID,
+		Repository: imageName,
+		Tag:        "latest",
+		Message:    "created by flying whale"})
+	if err != nil {
+		panic(err)
+	}
 }

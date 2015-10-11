@@ -21,6 +21,23 @@ func (cmd *Install) checkArgs() {
 	cmd.pmName = args[1]
 }
 
+func (cmd *Install) compareNewCommand(before []string, after []string) []string {
+	result := make([]string, 0, 0)
+	for _, a := range after {
+		isNew := true
+		for _, b := range before {
+			if a == b {
+				isNew = false
+				break
+			}
+		}
+		if isNew {
+			result = append(result, a)
+		}
+	}
+	return result
+}
+
 // Execute this commands
 func (cmd *Install) Execute() {
 
@@ -33,15 +50,35 @@ func (cmd *Install) Execute() {
 	pm.InitializeInstall()
 
 	// Pull
-	// fmt.Println("Pulling " + pm.GetImageName())
-	// docker.PullImage(pm.GetImageName())
+	fmt.Print("Pulling " + pm.GetImageName() + "...")
+	docker.PullImage(pm.GetImageName())
+	fmt.Println("Done")
 
 	// TODO check dupricate container name
 
-	// CreateContainer
-	fmt.Println("Creating container ")
 	pm.CreateContainer()
+	defer docker.RemoveContainer()
 
-	fmt.Println("Updating package manager")
+	before := pm.GetBinList()
+
 	pm.UpdatePackageManager()
+
+	pm.Install()
+
+	after := pm.GetBinList()
+
+	addedCommands := cmd.compareNewCommand(before, after)
+	if len(addedCommands) == 0 {
+		fmt.Println("cannot found an additional command")
+		docker.StopContainer()
+		docker.RemoveContainer()
+		return
+	}
+
+	docker.CommitContainer(pm.GetContainerName())
+
+	for _, command := range addedCommands {
+		pm.CreateCommandScript(command)
+		fmt.Println("ready for:" + command)
+	}
 }
