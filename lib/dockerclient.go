@@ -2,8 +2,6 @@ package lib
 
 import (
 	"bytes"
-	"fmt"
-	"os"
 
 	"github.com/fsouza/go-dockerclient"
 )
@@ -20,12 +18,7 @@ type DockerClient struct {
 // CreateDockerClient gets docker client
 func CreateDockerClient() *DockerClient {
 	d := DockerClient{}
-	endpoint := "tcp://192.168.99.100:2376"
-	path := os.Getenv("DOCKER_CERT_PATH")
-	ca := fmt.Sprintf("%s/ca.pem", path)
-	cert := fmt.Sprintf("%s/cert.pem", path)
-	key := fmt.Sprintf("%s/key.pem", path)
-	client, err := docker.NewTLSClient(endpoint, cert, key, ca)
+	client, err := docker.NewClientFromEnv()
 	if err != nil {
 		panic(err)
 	}
