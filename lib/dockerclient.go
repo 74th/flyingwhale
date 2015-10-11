@@ -68,7 +68,7 @@ func (d *DockerClient) CreateContainer(containerName string, imageName string, e
 	config := docker.Config{
 		Image:        imageName,
 		Entrypoint:   []string{"ls"},
-		Cmd:          []string{"/usr/local/bin/"},
+		Cmd:          []string{"-1", "/usr/local/bin/"},
 		AttachStdin:  false,
 		AttachStdout: true,
 		AttachStderr: true}
@@ -85,6 +85,7 @@ func (d *DockerClient) CreateContainer(containerName string, imageName string, e
 		container.ID,
 		&hostConfig)
 
+	// var stdin bytes.Buffer
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 	d.client.Logs(docker.LogsOptions{
@@ -95,10 +96,77 @@ func (d *DockerClient) CreateContainer(containerName string, imageName string, e
 		Tail:         "all",
 		OutputStream: &stdout,
 		ErrorStream:  &stderr})
-
+	d.client.RemoveContainer(docker.RemoveContainerOptions{
+		ID: container.ID})
 	fmt.Println(stdout.String())
 	fmt.Println(stderr.String())
 	fmt.Println("---")
+
+	config = docker.Config{
+		Image:        imageName,
+		Entrypoint:   []string{"sh"},
+		OpenStdin:    true,
+		StdinOnce:    true,
+		AttachStdin:  true,
+		AttachStdout: true,
+		AttachStderr: true}
+	container, err = d.client.CreateContainer(docker.CreateContainerOptions{
+		Config: &config,
+		Name:   containerName})
+	if err != nil {
+		panic(err)
+	}
+
+	d.client.StartContainer(
+		container.ID,
+		&hostConfig)
+
+	exec, err := d.client.CreateExec(docker.CreateExecOptions{
+		AttachStdin:  false,
+		AttachStdout: true,
+		AttachStderr: true,
+		Cmd:          []string{"npm", "update"},
+		Container:    container.ID})
+	if err != nil {
+		panic(err)
+	}
+	stdout.Reset()
+	stderr.Reset()
+	d.client.StartExec(exec.ID, docker.StartExecOptions{
+		Detach:       false,
+		OutputStream: &stdout,
+		ErrorStream:  &stderr})
+	fmt.Println(stdout.String())
+	fmt.Println(stderr.String())
+	fmt.Println("---")
+
+	exec, err = d.client.CreateExec(docker.CreateExecOptions{
+		AttachStdin:  false,
+		AttachStdout: true,
+		AttachStderr: true,
+		Cmd:          []string{"npm", "install", "-yg", "mared"},
+		Container:    container.ID})
+	if err != nil {
+		panic(err)
+	}
+	stdout.Reset()
+	stderr.Reset()
+	d.client.StartExec(exec.ID, docker.StartExecOptions{
+		Detach:       false,
+		OutputStream: &stdout,
+		ErrorStream:  &stderr})
+	fmt.Println(stdout.String())
+	fmt.Println("---")
+	fmt.Println(stderr.String())
+	fmt.Println("---")
+
+	err = d.client.StopContainer(
+		container.ID,
+		1)
+	if err != nil {
+		panic(err)
+	}
+
 }
 
 // Exec is run
