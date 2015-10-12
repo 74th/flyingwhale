@@ -16,6 +16,8 @@ You can use it!
 marked README.md
 ```
 
+Also you can use ```whale apt-get install``` and ```whale yum install``` too.
+
 ## how it works
 
 It creates a docker container installed the command by using package managers, and adds a script to call the container into /usr/local/bin/.
