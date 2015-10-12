@@ -18,7 +18,7 @@ type IPackageManager interface {
 
 	Install()
 
-	CreateCommandScript(commandName string)
+	CreateCommandScript(commandName string) bool
 }
 
 // AbstractPackageManager is the abstract package manager
@@ -30,6 +30,10 @@ type AbstractPackageManager struct {
 func CreatePackageManager(name string, client *DockerClient) IPackageManager {
 	if name == "npm" {
 		return CreateNpm(client)
+	} else if name == "yum" {
+		return CreateYum(client)
+	} else if name == "apt-get" {
+		return CreateAptGet(client)
 	}
 	panic("cannot use " + name)
 }

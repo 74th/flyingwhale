@@ -79,7 +79,9 @@ func (cmd *Install) Execute() {
 	docker.CommitContainer(pm.GetContainerName())
 
 	for _, command := range addedCommands {
-		pm.CreateCommandScript(command)
-		fmt.Println("ready for:" + command)
+		succ := pm.CreateCommandScript(command)
+		if succ {
+			fmt.Println("ready for:" + command)
+		}
 	}
 }

@@ -2,6 +2,7 @@ package lib
 
 import (
 	"bytes"
+	"fmt"
 
 	"github.com/fsouza/go-dockerclient"
 )
@@ -110,6 +111,16 @@ func (d *DockerClient) Exec(commands []string) (stdout string, stderr string) {
 	if err != nil {
 		panic(err)
 	}
+	inspect, err := d.client.InspectExec(exec.ID)
+	if err != nil {
+		panic(err)
+	}
+	if inspect.ExitCode != 0 {
+		fmt.Println(stdoutStream.String())
+		fmt.Println(stderrStream.String())
+		panic("an error ocuured")
+	}
+
 	return stdoutStream.String(), stderrStream.String()
 }
 

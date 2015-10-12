@@ -57,19 +57,11 @@ func (pm *Npm) UpdatePackageManager() {
 	output, errstr := pm.AbstractPackageManager.Client.Exec([]string{"npm", "update"})
 	fmt.Println(output)
 	fmt.Println(errstr)
-	if !strings.HasSuffix(strings.TrimSpace(errstr), "ok") {
-		panic("an error ocurred!")
-	}
 }
 
 // GetBinList is
 func (pm *Npm) GetBinList() []string {
-	output, errstr := pm.AbstractPackageManager.Client.Exec([]string{"ls", "-1", "/usr/local/bin/"})
-	if len(strings.TrimSpace(errstr)) > 0 {
-		fmt.Println(output)
-		fmt.Println(errstr)
-		panic("an error ocurred!")
-	}
+	output, _ := pm.AbstractPackageManager.Client.Exec([]string{"ls", "-1", "/usr/local/bin/"})
 	return strings.Split(strings.TrimSpace(output), "\n")
 }
 
@@ -84,6 +76,7 @@ func (pm *Npm) Install() {
 }
 
 // CreateCommandScript create a command script
-func (pm *Npm) CreateCommandScript(command string) {
+func (pm *Npm) CreateCommandScript(command string) bool {
 	pm.AbstractPackageManager.CreateExecuteCommand(pm.GetContainerName(), command, []string{})
+	return true
 }

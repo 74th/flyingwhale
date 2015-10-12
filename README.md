@@ -32,11 +32,11 @@ Available for MacOS and Linux. https://github.com/74th/flyingwhale/releases
 
 ## supporting package manages
 
-* npm
+* whale npm install <package-name>
+* whale yum install <package-name>
+* whale apt-get install <package-name>
 
 ## features
 
-* yum
-* apt-get
 * windows
-* proxy
+* behind proxy
