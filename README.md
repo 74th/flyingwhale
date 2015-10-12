@@ -28,14 +28,7 @@ docker run -it --rm -v `pwd`:/src --workdir=/src --entrypoint=marked whale-npm-m
 
 ## install
 
-### MacOS
-
-It requires to install docker tool box.
-
-```
-curl http://xxx/flyingwhale_darwin > /usr/local/bin/whale
-+x whale
-```
+Available for MacOS and Linux. https://github.com/74th/flyingwhale/releases
 
 ## supporting package manages
 
