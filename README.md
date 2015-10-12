@@ -18,7 +18,7 @@ marked README.md
 
 ## how it works
 
-It creates a docker container installed the command by using package managers, and adds a script calling the container into /usr/local/bin/.
+It creates a docker container installed the command by using package managers, and adds a script to call the container into /usr/local/bin/.
 
 ```
 #!/bin/sh
