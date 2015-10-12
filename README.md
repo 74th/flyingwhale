@@ -32,9 +32,9 @@ Available for MacOS and Linux. https://github.com/74th/flyingwhale/releases
 
 ## supporting package manages
 
-* whale npm install <package-name>
-* whale yum install <package-name>
-* whale apt-get install <package-name>
+* ```whale npm install <package-name>```
+* ```whale yum install <package-name>```
+* ```whale apt-get install <package-name>```
 
 ## features
 
