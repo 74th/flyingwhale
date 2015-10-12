@@ -16,9 +16,10 @@ type Install struct {
 func (cmd *Install) checkArgs() {
 	args := flag.Args()
 	if len(args) < 3 {
+		fmt.Println("whale <package manager> install <package>")
 		panic("too few arguments")
 	}
-	cmd.pmName = args[1]
+	cmd.pmName = args[0]
 }
 
 func (cmd *Install) compareNewCommand(before []string, after []string) []string {
