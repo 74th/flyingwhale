@@ -16,7 +16,7 @@ You can use it!
 marked README.md
 ```
 
-## how it work
+## how it works
 
 It creates a docker container installed the command by using package managers, and adds a script calling the container into /usr/local/bin/.
 
@@ -39,4 +39,5 @@ Available for MacOS and Linux. https://github.com/74th/flyingwhale/releases
 ## features
 
 * windows
+* command different from package name
 * behind proxy
