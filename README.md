@@ -1,4 +1,4 @@
-# Flying Whale
+# Flying Whale : any package management in the container
 
 This makes a container as a command line tool from many package management systems.
 
@@ -43,3 +43,7 @@ Available for MacOS and Linux. https://github.com/74th/flyingwhale/releases
 * windows
 * command different from package name
 * behind proxy
+
+## License
+
+* Apache License 2.0
