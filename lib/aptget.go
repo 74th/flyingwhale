@@ -75,9 +75,6 @@ func (pm *AptGet) Install() {
 
 // CreateCommandScript create a command script
 func (pm *AptGet) CreateCommandScript(command string) bool {
-	if command != pm.PackageName {
-		return false
-	}
 	pm.AbstractPackageManager.CreateExecuteCommand(pm.GetContainerName(), command, []string{})
 	return true
 }

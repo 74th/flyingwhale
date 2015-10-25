@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// Yum : for nodejs
+// Yum is the package manager of centos
 type Yum struct {
 	AbstractPackageManager
 	PackageName string
@@ -75,9 +75,6 @@ func (pm *Yum) Install() {
 
 // CreateCommandScript create a command script
 func (pm *Yum) CreateCommandScript(command string) bool {
-	if command != pm.PackageName {
-		return false
-	}
 	pm.AbstractPackageManager.CreateExecuteCommand(pm.GetContainerName(), command, []string{})
 	return true
 }

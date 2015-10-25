@@ -21,7 +21,6 @@ func (cmd *Install) checkArgs() {
 	}
 	cmd.pmName = args[0]
 }
-
 func (cmd *Install) compareNewCommand(before []string, after []string) []string {
 	result := make([]string, 0, 0)
 	for _, a := range after {
@@ -37,6 +36,35 @@ func (cmd *Install) compareNewCommand(before []string, after []string) []string 
 		}
 	}
 	return result
+}
+
+// show list additional commands
+func (cmd *Install) showListCommand(list []string) []bool {
+	input := make([]bool, len(list))
+	for i := range list {
+		input[i] = false
+	}
+	for true {
+		for i, command := range list {
+			if input[i] {
+				fmt.Print("[*]")
+			} else {
+				fmt.Print("[ ]")
+			}
+			fmt.Println(i+1, ":", command)
+		}
+		fmt.Print("select number (exit for 0):")
+		var in int
+		_, err := fmt.Scan(&in)
+		if err != nil {
+			panic("cannnot load intenger")
+		}
+		if in == 0 {
+			break
+		}
+		input[in-1] = !input[in-1]
+	}
+	return input
 }
 
 // Execute this commands
@@ -78,10 +106,15 @@ func (cmd *Install) Execute() {
 
 	docker.CommitContainer(pm.GetContainerName())
 
-	for _, command := range addedCommands {
-		succ := pm.CreateCommandScript(command)
-		if succ {
-			fmt.Println("ready for:" + command)
+	// list additional command
+	installList := cmd.showListCommand(addedCommands)
+
+	for i, command := range addedCommands {
+		if installList[i] {
+			succ := pm.CreateCommandScript(command)
+			if succ {
+				fmt.Println("ready for:" + command)
+			}
 		}
 	}
 }
