@@ -38,12 +38,6 @@ Available for MacOS and Linux. https://github.com/74th/flyingwhale/releases
 * ```whale yum install <package-name>```
 * ```whale apt-get install <package-name>```
 
-## features
-
-* windows
-* command different from package name
-* behind proxy
-
 ## License
 
 * Apache License 2.0
