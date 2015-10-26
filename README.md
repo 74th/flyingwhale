@@ -1,4 +1,4 @@
-# Flying Whale : any package management in the container
+# Flying Whale : any package management systems in the container
 
 This makes a container as a command line tool from many package management systems.
 
