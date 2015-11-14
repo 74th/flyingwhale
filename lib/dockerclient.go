@@ -3,6 +3,7 @@ package lib
 import (
 	"bytes"
 	"fmt"
+	"time"
 
 	"github.com/fsouza/go-dockerclient"
 )
@@ -89,8 +90,8 @@ func (d *DockerClient) StopContainer() {
 	}
 }
 
-// Exec is run
-func (d *DockerClient) Exec(commands []string) (stdout string, stderr string) {
+// ExecShortCommand executes docker exec with stdout
+func (d *DockerClient) ExecShortCommand(commands []string, allowErrExit bool) (stdout string, stderr string) {
 
 	exec, err := d.client.CreateExec(docker.CreateExecOptions{
 		AttachStdin:  false,
@@ -111,17 +112,80 @@ func (d *DockerClient) Exec(commands []string) (stdout string, stderr string) {
 	if err != nil {
 		panic(err)
 	}
+
 	inspect, err := d.client.InspectExec(exec.ID)
-	if err != nil {
-		panic(err)
-	}
 	if inspect.ExitCode != 0 {
-		fmt.Println(stdoutStream.String())
-		fmt.Println(stderrStream.String())
-		panic("an error ocuured")
+		fmt.Print("\x1b[31m", stderrStream.String(), "\x1b[0m")
+		panic("something wrong")
 	}
 
 	return stdoutStream.String(), stderrStream.String()
+}
+
+// ExecWithShowingStdout executes docker exec with stdout
+func (d *DockerClient) ExecWithShowingStdout(commands []string, allowErrExit bool) {
+
+	exec, err := d.client.CreateExec(docker.CreateExecOptions{
+		AttachStdin:  false,
+		AttachStdout: true,
+		AttachStderr: true,
+		Cmd:          commands,
+		Container:    d.container.ID})
+	if err != nil {
+		panic(err)
+	}
+
+	isRunGuard := true
+	var stdoutStream bytes.Buffer
+	var stderrStream bytes.Buffer
+
+	go func() {
+		// goroutineでexecを実行
+		err = d.client.StartExec(exec.ID, docker.StartExecOptions{
+			Detach:       false,
+			OutputStream: &stdoutStream,
+			ErrorStream:  &stderrStream})
+		if err != nil {
+			panic(err)
+		}
+		// 完了のフラグ
+		isRunGuard = false
+	}()
+
+	for true {
+		// 終了するまで表示する
+		if stdoutStream.Len() > 0 {
+			fmt.Print(stdoutStream.String())
+			stdoutStream.Reset()
+		}
+		if stderrStream.Len() > 0 {
+			fmt.Print("\x1b[31m", stderrStream.String(), "\x1b[0m")
+			stderrStream.Reset()
+		}
+		if err != nil {
+			panic(err)
+		}
+		time.Sleep(100 * time.Millisecond)
+		if !isRunGuard {
+			break
+		}
+	}
+	// 最後の出力
+	if stdoutStream.Len() > 0 {
+		fmt.Print(stdoutStream.String())
+		stdoutStream.Reset()
+	}
+	if stderrStream.Len() > 0 {
+		fmt.Print("\x1b[31m", stderrStream.String(), "\x1b[0m")
+		stderrStream.Reset()
+	}
+
+	inspect, err := d.client.InspectExec(exec.ID)
+	if inspect.ExitCode != 0 {
+		if !allowErrExit {
+			panic("an error ocuured")
+		}
+	}
 }
 
 // RemoveContainer remove a container

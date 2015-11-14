@@ -2,7 +2,6 @@ package lib
 
 import (
 	"flag"
-	"fmt"
 	"strings"
 )
 
@@ -54,23 +53,19 @@ func (pm *Yum) CreateContainer() {
 
 // UpdatePackageManager call yum update
 func (pm *Yum) UpdatePackageManager() {
-	output, errstr := pm.AbstractPackageManager.Client.Exec([]string{"yum", "update", "-y"})
-	fmt.Println(output)
-	fmt.Println(errstr)
+	pm.AbstractPackageManager.Client.ExecWithShowingStdout([]string{"yum", "update", "-y"}, false)
 }
 
 // GetBinList is
 func (pm *Yum) GetBinList() []string {
-	output, _ := pm.AbstractPackageManager.Client.Exec([]string{"ls", "-1", "/usr/bin/"})
+	output, _ := pm.AbstractPackageManager.Client.ExecShortCommand([]string{"ls", "-1", "/usr/bin/"}, false)
 	list := strings.Split(strings.TrimSpace(output), "\n")
 	return list
 }
 
 // Install install node package
 func (pm *Yum) Install() {
-	output, errstr := pm.AbstractPackageManager.Client.Exec([]string{"yum", "install", "-y", pm.PackageName})
-	fmt.Println(output)
-	fmt.Println(errstr)
+	pm.AbstractPackageManager.Client.ExecWithShowingStdout([]string{"yum", "install", "-y", pm.PackageName}, false)
 }
 
 // CreateCommandScript create a command script

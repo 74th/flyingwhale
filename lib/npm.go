@@ -2,7 +2,6 @@ package lib
 
 import (
 	"flag"
-	"fmt"
 	"strings"
 )
 
@@ -54,25 +53,18 @@ func (pm *Npm) CreateContainer() {
 
 // UpdatePackageManager call npm update
 func (pm *Npm) UpdatePackageManager() {
-	output, errstr := pm.AbstractPackageManager.Client.Exec([]string{"npm", "update"})
-	fmt.Println(output)
-	fmt.Println(errstr)
+	pm.AbstractPackageManager.Client.ExecWithShowingStdout([]string{"npm", "update"}, true)
 }
 
 // GetBinList is
 func (pm *Npm) GetBinList() []string {
-	output, _ := pm.AbstractPackageManager.Client.Exec([]string{"ls", "-1", "/usr/local/bin/"})
+	output, _ := pm.AbstractPackageManager.Client.ExecShortCommand([]string{"ls", "-1", "/usr/local/bin/"}, false)
 	return strings.Split(strings.TrimSpace(output), "\n")
 }
 
 // Install install node package
 func (pm *Npm) Install() {
-	output, errstr := pm.AbstractPackageManager.Client.Exec([]string{"npm", "install", "-yg", pm.PackageName})
-	fmt.Println(output)
-	fmt.Println(errstr)
-	if !strings.HasSuffix(strings.TrimSpace(errstr), "ok") {
-		panic("an error ocurred!")
-	}
+	pm.AbstractPackageManager.Client.ExecWithShowingStdout([]string{"npm", "install", "-yg", pm.PackageName}, true)
 }
 
 // CreateCommandScript create a command script

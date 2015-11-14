@@ -2,7 +2,6 @@ package lib
 
 import (
 	"flag"
-	"fmt"
 	"strings"
 )
 
@@ -54,23 +53,19 @@ func (pm *AptGet) CreateContainer() {
 
 // UpdatePackageManager call apt-get update
 func (pm *AptGet) UpdatePackageManager() {
-	output, errstr := pm.AbstractPackageManager.Client.Exec([]string{"apt-get", "update", "-y"})
-	fmt.Println(output)
-	fmt.Println(errstr)
+	pm.AbstractPackageManager.Client.ExecWithShowingStdout([]string{"apt-get", "update", "-y"}, true)
 }
 
 // GetBinList is
 func (pm *AptGet) GetBinList() []string {
-	output, _ := pm.AbstractPackageManager.Client.Exec([]string{"ls", "-1", "/usr/bin/"})
+	output, _ := pm.AbstractPackageManager.Client.ExecShortCommand([]string{"ls", "-1", "/usr/bin/"}, false)
 	list := strings.Split(strings.TrimSpace(output), "\n")
 	return list
 }
 
 // Install install node package
 func (pm *AptGet) Install() {
-	output, errstr := pm.AbstractPackageManager.Client.Exec([]string{"apt-get", "install", "-y", pm.PackageName})
-	fmt.Println(output)
-	fmt.Println(errstr)
+	pm.AbstractPackageManager.Client.ExecWithShowingStdout([]string{"apt-get", "install", "-y", pm.PackageName}, false)
 }
 
 // CreateCommandScript create a command script
