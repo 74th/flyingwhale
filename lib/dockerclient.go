@@ -3,7 +3,7 @@ package lib
 import (
 	"bytes"
 	"fmt"
-	"time"
+	"os"
 
 	"github.com/fsouza/go-dockerclient"
 )
@@ -49,12 +49,23 @@ func (d *DockerClient) HasImage(name string) bool {
 
 // PullImage pull image
 func (d *DockerClient) PullImage(name string) {
-	opts := docker.PullImageOptions{
-		Repository: name,
-		Tag:        "latest"}
-	err := d.client.PullImage(opts, d.auth)
-	if err != nil {
-		panic(err)
+	var stream bytes.Buffer
+	guard := true
+	go func() {
+		err := d.client.PullImage(docker.PullImageOptions{
+			Repository:   name,
+			OutputStream: &stream,
+			Tag:          "latest"}, d.auth)
+		if err != nil {
+			panic(err)
+		}
+		guard = false
+	}()
+	for guard {
+		if stream.Len() > 0 {
+			fmt.Print(stream.String())
+			stream.Reset()
+		}
 	}
 }
 
@@ -135,49 +146,13 @@ func (d *DockerClient) ExecWithShowingStdout(commands []string, allowErrExit boo
 		panic(err)
 	}
 
-	isRunGuard := true
-	var stdoutStream bytes.Buffer
-	var stderrStream bytes.Buffer
-
-	go func() {
-		// goroutineでexecを実行
-		err = d.client.StartExec(exec.ID, docker.StartExecOptions{
-			Detach:       false,
-			OutputStream: &stdoutStream,
-			ErrorStream:  &stderrStream})
-		if err != nil {
-			panic(err)
-		}
-		// 完了のフラグ
-		isRunGuard = false
-	}()
-
-	for true {
-		// 終了するまで表示する
-		if stdoutStream.Len() > 0 {
-			fmt.Print(stdoutStream.String())
-			stdoutStream.Reset()
-		}
-		if stderrStream.Len() > 0 {
-			fmt.Print("\x1b[31m", stderrStream.String(), "\x1b[0m")
-			stderrStream.Reset()
-		}
-		if err != nil {
-			panic(err)
-		}
-		time.Sleep(100 * time.Millisecond)
-		if !isRunGuard {
-			break
-		}
-	}
-	// 最後の出力
-	if stdoutStream.Len() > 0 {
-		fmt.Print(stdoutStream.String())
-		stdoutStream.Reset()
-	}
-	if stderrStream.Len() > 0 {
-		fmt.Print("\x1b[31m", stderrStream.String(), "\x1b[0m")
-		stderrStream.Reset()
+	// goroutineでexecを実行
+	err = d.client.StartExec(exec.ID, docker.StartExecOptions{
+		Detach:       false,
+		OutputStream: os.Stdout,
+		ErrorStream:  os.Stderr})
+	if err != nil {
+		panic(err)
 	}
 
 	inspect, err := d.client.InspectExec(exec.ID)
